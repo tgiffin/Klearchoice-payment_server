@@ -76,7 +76,23 @@ function create_batch_job()
         console.error("database error creating batch: " + util.inspect(err));
       }
       //get all the records we tagged with the batch id
-      cn.query("select * from transactions where batch_id=?",[batch_id],
+      cn.query("select " + 
+                      ["transactions.id as id",
+                      "donor_id",
+                      "charity_id",
+                      "amount",
+                      "klearchoice_fee",
+                      "processor_fee",
+                      "batch_id",
+                      "donor.first_name as first_name",
+                      "donor.last_name as last_name",
+                      "donor.email as email",
+                      "charity.charity_name as charity_name",
+                      "charity.dwolla_id as destination_id"].join(",") + 
+                " from transactions " + 
+                " join charity on charity.id = charity_id " + 
+                " join donor on donor.id = donor_id " + 
+                " where batch_id=?",[batch_id],
         function(err,rows)
         {
           if(err)
