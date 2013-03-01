@@ -2,7 +2,10 @@
 /** 
  * process_incoming_accounts.js
  *
- * get a list of files sitting in the "incoming" path.
+ * Monitor the "incoming" path for new account files and move them to their proper location.
+ * Final location is based on last name, first name and donor_id.
+ *
+ * Destination path is config.account_path, file name is <donor_id>.json
  *
  * file format is:
  * 
@@ -10,14 +13,25 @@
  *   "donor_id":<donor id>,
  *   "first_name":<first name>,
  *   "last_name":<last name>,
+ *   "email": <email>,
  *   "account": <base64 encoded rsa encryption field>
  * }
  *
  * where the account field is base64 encoded rsa encrypted field that looks like:
  * {
  *   "account_number":<bank account number>,
- *   "routing_number":<bank routing number>
+ *   "routing_number":<bank routing number>,
+ *   "account_type":<either "Checking" or "Savings">
  * }
+ *
+ * History
+ *
+ * Author     Date            Comment
+ * --------------------------------------------------------
+ * clay       2.27.2013       Initial version created
+ *
+ *
+ * Authored by Clayton C Gulick (clay@ratiosoftware.com)
  */
 
 var fs = require("fs");
@@ -46,8 +60,8 @@ fs.watch(config.incoming_account_path,
       console.log("processing: " + source_path);
       var file_contents = fs.readFileSync(source_path);
       var parsed_file = JSON.parse(file_contents);
-      var top_dir = parsed_file.last_name.substr(0,2);
-      var bottom_dir = parsed_file.first_name.substr(0,2);
+      var top_dir = parsed_file.last_name.toLowerCase().substr(0,2);
+      var bottom_dir = parsed_file.first_name.toLowerCase().substr(0,2);
       
       var dest_path = config.account_path + "/" + top_dir;
 
