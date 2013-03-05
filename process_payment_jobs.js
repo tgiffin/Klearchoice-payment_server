@@ -46,7 +46,7 @@ function process_file()
   var file = file_queue.shift();
   var src_path = config.job_path + "/" + file;
   var dest_path = config.processing_path + "/" + file;
-  fs.rename(src_path,dest_path);
+  fs.renameSync(src_path,dest_path);
 
   var file_contents = fs.readFileSync(dest_path,"utf8");
   var parsed_file = JSON.parse(file_contents);
@@ -65,7 +65,7 @@ function process_file()
         {
           return promise.isFulfilled() ? 'success' : 'error';
         });
-      console.log("completed processing batch_id: " + parsed_file.batch_id + " successful transactions: " + counts.success + " failed: " + counts.error);
+      console.log("completed processing batch_id: " + parsed_file.batch_id + ". successful transactions: " + counts.success + " failed: " + counts.error);
       process_file(); //process the next file in the queue
     });
 }
@@ -96,14 +96,14 @@ function process_transaction(transaction)
   var e = {
     transaction_id: transaction.id,
     batch_id: transaction.batch_id,
-    error: err
+    error: null 
   };
 
   try
   {
     //find the correct account file and load it
-    var top_dir = donor.last_name.toLowerCase().substr(0,2);
-    var bottom_dir = donor.first_name.toLowerCase().substr(0,2);
+    var top_dir = transaction.last_name.toLowerCase().substr(0,2);
+    var bottom_dir = transaction.first_name.toLowerCase().substr(0,2);
     var account_file_path = config.account_path + "/" + top_dir + "/" + bottom_dir + "/" + transaction.donor_id + ".json";
     if(!fs.existsSync(account_file_path))
     {
@@ -142,8 +142,8 @@ function process_transaction(transaction)
           groupId: transaction.charity_id,
           additionalFees: [
             {
-              config.dwolla_id,
-              transaction.klearchoice_fee
+              destinationId: config.dwolla_id,
+              amount: transaction.klearchoice_fee
             }
           ]
         }
@@ -155,6 +155,7 @@ function process_transaction(transaction)
         if(err)
         {
           console.log("Error sending transaction: " + transaction.id + " to Dwolla. Error: " + util.inspect(err));
+          update_transaction_status(transaction,"error",err);
           e.error = err;
           errors.push(e);
           d.reject(e);
@@ -162,13 +163,18 @@ function process_transaction(transaction)
         }
         if(!body.Success)
         {
+          console.log("Dwolla error transaction: " + transaction.id + ". Error: " + util.inspect(body));
+          update_transaction_status(transaction,"error",body.Message);
           e.error = body.Message;
           errors.push(e);
           d.reject(e);
           return;
         }
 
-        d.resolve();
+        console.log("posted transaction id: " + transaction.id + " dwolla transaction id: " + body.Response);
+        update_transaction_status(transaction,"posted","posted to dwolla",body.Response,d);
+
+        d.resolve(body.Response);
 
       });
 
@@ -191,7 +197,12 @@ function process_transaction(transaction)
 function update_transaction_status(transaction,status,message,processor_transaction_id,deferred)
 {
   message = (new Date()).toString() + message;
-  cn.query("update transactions set status=?, message=?, log=concat(coalesce(log,''),?), processor_transaction_id=? where id=?", [status,message,message + "\n",transaction.id,processor_transaction_id],
+  cn.query("update transactions set status=?, message=?, log=concat(coalesce(log,''),?), processor_transaction_id=? where id=?", 
+          [status,
+          message,
+          message + "\n",
+          processor_transaction_id,
+          transaction.id],
     function(err,rows)
     {
       if(err)
