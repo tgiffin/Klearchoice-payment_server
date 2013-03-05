@@ -29,6 +29,7 @@ var _ = require("underscore");
 var file_queue = [];
 var request = require("request");
 var errors = [];
+var transactions = [];
 
 /**
  * Read a job file and process each row. Update the database status of each transaction.
@@ -38,6 +39,9 @@ function process_file()
 
   //clear out the errors
   errors = [];
+
+  //make sure the transaction array is empty
+  transactions = [];
 
   //the first thing we do is move the file over to the processing folder. This is to ensure
   //that a donor doesn't accidentally get charged twice if a batch fails and the file stays
@@ -52,11 +56,19 @@ function process_file()
   var parsed_file = JSON.parse(file_contents);
   var promises = [];
   console.log("processing batch_id: " + parsed_file.batch_id + " transactions: " + parsed_file.transactions.length);
+  //transactions need to be queued and called sequentially because dwolla's crap server
+  //is apparently made out of bubble bum and paperclips. If you make even a few simultaneous 
+  //requests, it starts faulting all over the place. Therefore, in order to limit the number
+  //of errors we need to throttle our requests. gah. GAH. And, of course, they don't have a batch interface.
   parsed_file.transactions.forEach(
     function(transaction,index,arr)
     {
-      promises.push(process_transaction(transaction)); //this is async!!
+      transaction.d = Q.defer();
+      transactions.push(transaction);
+      promises.push(transaction.d.promise); 
     });
+
+  process_transaction(); //kick off transaction queue processing.
   Q.allResolved(promises).then(
     function(proms)
     {
@@ -72,6 +84,7 @@ function process_file()
 
 /**
  * Process an individual transaction from the batch file
+ * This drains an object out of the transaction queue. On failure or success, it will continue on to the next transaction
  * transaction object looks like:
  *
  * {
@@ -90,9 +103,12 @@ function process_file()
  * }
  *
  */
-function process_transaction(transaction)
+function process_transaction()
 {
-  var d = Q.defer();
+  if(transactions.length == 0) return; //nothing to do
+
+  var transaction = transactions.shift();
+  var d = transaction.d;
   var e = {
     transaction_id: transaction.id,
     batch_id: transaction.batch_id,
@@ -107,7 +123,11 @@ function process_transaction(transaction)
     var account_file_path = config.account_path + "/" + top_dir + "/" + bottom_dir + "/" + transaction.donor_id + ".json";
     if(!fs.existsSync(account_file_path))
     {
+      process.nextTick(process_transaction); //ensure we move on to the next transaction in the file
       var message = "Missing account credentials for donor id: " + transaction.donor_id + " transaction id: " + transaction.id;
+      e.error = message;
+      errors.push(e);
+      d.reject(e);
       console.error(message);
       update_transaction_status(transaction,'error',message);
       return;
@@ -151,6 +171,8 @@ function process_transaction(transaction)
       //http request callback
       function(err, reponse, body)
       {
+
+        process.nextTick(process_transaction); //ensure we move on to the next transaction in the file
         
         if(err)
         {
@@ -181,6 +203,7 @@ function process_transaction(transaction)
   }
   catch(err)
   {
+    process.nextTick(process_transaction); //ensure we move on to the next transaction in the file
     console.log("error processing transaction: " + transaction.id + " error: " + util.inspect(err));
     e.error = err;
     update_transaction_status(transaction,'error',util.inspect(err));
