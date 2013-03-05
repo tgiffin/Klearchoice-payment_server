@@ -49,10 +49,12 @@ function process_file()
   if(file_queue.length == 0) return;
   var file = file_queue.shift();
   var src_path = config.job_path + "/" + file;
-  var dest_path = config.processing_path + "/" + file;
-  fs.renameSync(src_path,dest_path);
+  var processing_path = config.processing_path + "/" + file;
+  var processed_path = config.processed_path + "/" + file;
+  var error_path = config.error_path + "/" + file;
+  fs.renameSync(src_path,processing_path);
 
-  var file_contents = fs.readFileSync(dest_path,"utf8");
+  var file_contents = fs.readFileSync(processing_path,"utf8");
   var parsed_file = JSON.parse(file_contents);
   var promises = [];
   console.log("processing batch_id: " + parsed_file.batch_id + " transactions: " + parsed_file.transactions.length);
@@ -78,6 +80,11 @@ function process_file()
           return promise.isFulfilled() ? 'success' : 'error';
         });
       console.log("completed processing batch_id: " + parsed_file.batch_id + ". successful transactions: " + counts.success + " failed: " + counts.error);
+      //move file to processed folder
+      fs.renameSync(processing_path,processed_path);
+      //write out error log
+      if(errors.length)
+        fs.writeFileSync(error_path, JSON.stringify(errors,null,2));
       process_file(); //process the next file in the queue
     });
 }
