@@ -9,7 +9,7 @@ module.exports = {
   db_host: "192.168.1.100",
   db_user: "klearchoice",
   db_password: "KC02242012",
-  dwolla_id: 1234, //this is the id of klearchoice's account
+  dwolla_id: "812-708-2911", //this is the id of klearchoice's account
   dwolla_app_id: "1JUZIa33HXhhyyDhX3PpT6XDk8vp3B0NtO0lQe7rbxKiOhYTGI",
   dwolla_app_secret: "pTqTyg6VCVMO6UlgXnarzqndt3mJLDJdJNiI4dLSwDo3rIoi3/",
   create_batch_frequency: 10000, /* frequency to poll db in ms */
