@@ -329,6 +329,6 @@ function check_for_jobs()
 console.log("starting...");
 private_key_string = fs.readFileSync(config.private_key_path,"utf8");
 console.log("private key loaded, monitoring: " + config.job_path);
-check_for_jobs();
-//setInterval(check_for_jobs, config.process_jobs_frequency);
+//check_for_jobs();
+setInterval(check_for_jobs, config.process_jobs_frequency);
 
