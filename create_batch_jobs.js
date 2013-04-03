@@ -31,7 +31,7 @@ var fs = require("fs");
 
 function create_batch_job()
 {
-  console.log("Starting batch job...");
+  console.log((new Date()).toString() + " Starting batch job...");
   //open the database connection
   var cn = mysql.createConnection(
     {
@@ -47,7 +47,7 @@ function create_batch_job()
     {
       if(err)
       {
-        console.error("ERROR: Unable to connect to the database: " + util.inspect(err));
+        console.error((new Date()).toString() + " ERROR: Unable to connect to the database: " + util.inspect(err));
       }
     });
 
@@ -55,7 +55,7 @@ function create_batch_job()
   cn.on("error",
     function(err)
     {
-      console.error("ERROR: database error: " + util.inspect(err));
+      console.error((new Date()).toString() + " ERROR: database error: " + util.inspect(err));
     });
 
   //get all unprocessed transactions
@@ -65,7 +65,7 @@ function create_batch_job()
   batch_control.last_batch_date = (new Date()).toString();
   var batch_id = batch_control.last_batch_id;
 
-  console.log("creating batch_id: " + batch_id);
+  console.log((new Date()).toString() + " creating batch_id: " + batch_id);
 
   //next, update all 'new' rows with the batch id, and 'batched' status
   cn.query("update transactions set status='batched', batch_id=?, batch_date=now() where status='new';",[batch_id],
@@ -73,7 +73,7 @@ function create_batch_job()
     {
       if(err)
       {
-        console.error("database error creating batch: " + util.inspect(err));
+        console.error((new Date()).toString() + " database error creating batch: " + util.inspect(err));
       }
       //get all the records we tagged with the batch id
       cn.query("select " + 
@@ -97,7 +97,7 @@ function create_batch_job()
         {
           if(err)
           {
-            console.error("error retrieving transaction rows: " + util.inspect(err));
+            console.error((new Date()).toString() + " error retrieving transaction rows: " + util.inspect(err));
           }
 
           var batch = {
@@ -108,11 +108,11 @@ function create_batch_job()
 
           if(rows.length == 0)
           {
-            console.log("no new transactions");
+            console.log((new Date()).toString() + " no new transactions");
           }
           else
           {
-            console.log("creating batch job " + batch_id + " with " + rows.length + " transactions");
+            console.log((new Date()).toString() + " creating batch job " + batch_id + " with " + rows.length + " transactions");
             //write the updated batch control file
             fs.writeFileSync(config.batch_control_file,JSON.stringify(batch_control));
             //write the job file

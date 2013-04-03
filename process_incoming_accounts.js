@@ -36,10 +36,11 @@
 
 var fs = require("fs");
 var console = require("console");
+var util = require("util");
 
 var config = require("./config");
 
-console.log("starting, watching for new files in: " + config.incoming_account_path);
+console.log((new Date()).toString() + " starting, watching for new files in: " + config.incoming_account_path);
 
 //get list of files
 //var files = fs.readdirSync(config.incoming_account_path);
@@ -53,11 +54,11 @@ fs.watch(config.incoming_account_path,
     //we don't care about deleted file events
     if(event == "rename") return;
 
-    console.log("detected change: " + event + " file: " + file);
+    console.log((new Date()).toString() + " detected change: " + event + " file: " + file);
     try
     {
       var source_path = config.incoming_account_path + "/" + file;
-      console.log("processing: " + source_path);
+      console.log((new Date()).toString() + " processing: " + source_path);
       var file_contents = fs.readFileSync(source_path);
       var parsed_file = JSON.parse(file_contents);
       var top_dir = parsed_file.last_name.toLowerCase().substr(0,2);
@@ -80,6 +81,7 @@ fs.watch(config.incoming_account_path,
     }
     catch(e)
     {
+      console.error((new Date()).toString() + util.inspect(e)); 
       var err = {
                   error: e.message,
                   date: (new Date()).toString(),
