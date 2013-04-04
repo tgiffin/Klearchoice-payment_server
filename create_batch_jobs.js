@@ -2,7 +2,6 @@
 /**
  * create_batch_jobs.js
  *
- *
  * Query database for unprocessed payment transactions. 
  * Create a batch file for later processing.
  * Update database, setting transaction status to 'batched' and the batch id to the correct number.
