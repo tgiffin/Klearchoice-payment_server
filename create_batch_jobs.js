@@ -126,5 +126,8 @@ function create_batch_job()
     });
 
 }
-//create_batch_job();
-setInterval(create_batch_job,config.create_batch_frequency);
+console.log(util.inspect(process.argv));
+if(process.argv[2] == "--now")
+  create_batch_job();
+else
+  setInterval(create_batch_job,config.create_batch_frequency);
