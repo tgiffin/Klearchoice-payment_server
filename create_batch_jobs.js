@@ -126,7 +126,7 @@ function create_batch_job()
     });
 
 }
-console.log(util.inspect(process.argv));
+
 if(process.argv[2] == "--now")
   create_batch_job();
 else
