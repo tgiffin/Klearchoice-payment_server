@@ -15,7 +15,7 @@ module.exports = {
   create_batch_frequency: 1000 * 60 * 5, /* frequency to poll db in ms */
   process_jobs_frequency: 1000 * 60 * 5, /* frequency to check the job path for new job files */
   payment_api_url: "https://www.dwolla.com/oauth/rest/transactions/guestsend",
-  incoming_account_path: "/home/payment/incoming",
+  incoming_account_path: "/home/incoming",
   account_path: "/home/payment/accounts",
   error_path: "/home/payment/errors",
   processing_path: "/home/payment/processing",
