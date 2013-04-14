@@ -1,0 +1,18 @@
+{
+  "name": "payment_server",
+  "version": "0.1.0",
+  "description": "Payment server scripts",
+  "dependencies": {
+    "mysql": "~2.0.0-alpha7",
+    "ursa": "~0.8.0",
+    "q": "~0.8.12",
+    "request": "~2.14.0",
+    "underscore": "~1.4.4"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Clayton Gulick (clay@ratiosoftware.com)",
+  "readmeFilename": "README.md",
+  "gitHead": "973fe32bcc01e86cba54d53377f494cb63dac352"
+}

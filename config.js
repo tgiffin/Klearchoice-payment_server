@@ -12,8 +12,8 @@ module.exports = {
   dwolla_id: "812-708-2911", //this is the id of klearchoice's account
   dwolla_app_id: "1JUZIa33HXhhyyDhX3PpT6XDk8vp3B0NtO0lQe7rbxKiOhYTGI",
   dwolla_app_secret: "pTqTyg6VCVMO6UlgXnarzqndt3mJLDJdJNiI4dLSwDo3rIoi3/",
-  create_batch_frequency: 1000 * 60 * 5, /* frequency to poll db in ms */
-  process_jobs_frequency: 1000 * 60 * 5, /* frequency to check the job path for new job files */
+  create_batch_frequency: 1000 * 10, /* frequency to poll db in ms */
+  process_jobs_frequency: 1000 * 10, /* frequency to check the job path for new job files */
   payment_api_url: "https://www.dwolla.com/oauth/rest/transactions/guestsend",
   incoming_account_path: "/home/incoming",
   account_path: "/home/payment/accounts",
