@@ -161,7 +161,7 @@ function process_transaction()
           lastName: transaction.last_name,
           emailAddress: transaction.email,
           routingNumber: account_info.routing_number,
-          accountNumber: account_info.acccount_number,
+          accountNumber: account_info.account_number,
           accountType: account_info.account_type,
           assumeCosts: true,
           destinationType: 'Dwolla',
