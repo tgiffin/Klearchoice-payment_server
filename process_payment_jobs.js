@@ -31,7 +31,6 @@ var file_queue = [];
 var request = require("request");
 var errors = [];
 var transactions = [];
-var payment = require("./payment").dwolla;
 
 /**
  * Read a job file and process each row. Update the database status of each transaction.
