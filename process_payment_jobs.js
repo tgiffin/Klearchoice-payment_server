@@ -11,6 +11,7 @@
  * --------------------------------------------------------
  * clay       2.27.2013       Initial version created
  * clay       3.4.2013        More work on payment processing
+ * clay       4.14.2013       Added additional logging
  *
  *
  * Authored by Clayton C Gulick (clay@ratiosoftware.com)
