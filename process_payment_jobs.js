@@ -30,6 +30,7 @@ var file_queue = [];
 var request = require("request");
 var errors = [];
 var transactions = [];
+var payment = require("./payment").dwolla;
 
 /**
  * Read a job file and process each row. Update the database status of each transaction.
@@ -57,7 +58,7 @@ function process_file()
   var file_contents = fs.readFileSync(processing_path,"utf8");
   var parsed_file = JSON.parse(file_contents);
   var promises = [];
-  console.log("processing batch_id: " + parsed_file.batch_id + " transactions: " + parsed_file.transactions.length);
+  console.log((new Date()).toString() + "processing batch_id: " + parsed_file.batch_id + " transactions: " + parsed_file.transactions.length);
   //transactions need to be queued and called sequentially because dwolla's crap server
   //is apparently made out of bubble bum and paperclips. If you make even a few simultaneous 
   //requests, it starts faulting all over the place. Therefore, in order to limit the number
@@ -79,7 +80,7 @@ function process_file()
         {
           return promise.isFulfilled() ? 'success' : 'error';
         });
-      console.log("completed processing batch_id: " + parsed_file.batch_id + ". successful transactions: " + counts.success + " failed: " + counts.error);
+      console.log((new Date()).toString() + "completed processing batch_id: " + parsed_file.batch_id + ". successful transactions: " + counts.success + " failed: " + counts.error);
       //move file to processed folder
       fs.renameSync(processing_path,processed_path);
       //write out error log
@@ -135,7 +136,7 @@ function process_transaction()
       e.error = message;
       errors.push(e);
       d.reject(e);
-      console.error(message);
+      console.error((new Date()).toString() + message);
       update_transaction_status(transaction,'error',message);
       return;
     }
@@ -183,7 +184,7 @@ function process_transaction()
         
         if(err)
         {
-          console.log("Error sending transaction: " + transaction.id + " to Dwolla. Error: " + util.inspect(err));
+          console.error((new Date()).toString() + "Error sending transaction: " + transaction.id + " to Dwolla. Error: " + util.inspect(err));
           update_transaction_status(transaction,"error",err);
           e.error = err;
           errors.push(e);
@@ -192,7 +193,7 @@ function process_transaction()
         }
         if(!body.Success)
         {
-          console.log("Dwolla error transaction: " + transaction.id + ". Error: " + util.inspect(body));
+          console.error((new Date()).toString() + "Dwolla error transaction: " + transaction.id + ". Error: " + util.inspect(body));
           update_transaction_status(transaction,"error",body.Message);
           e.error = body.Message;
           errors.push(e);
@@ -200,7 +201,7 @@ function process_transaction()
           return;
         }
 
-        console.log("posted transaction id: " + transaction.id + " dwolla transaction id: " + body.Response);
+        console.log((new Date()).toString() + "posted transaction id: " + transaction.id + " dwolla transaction id: " + body.Response);
         update_transaction_status(transaction,"posted","posted to dwolla",body.Response,d);
 
         d.resolve(body.Response);
@@ -211,7 +212,7 @@ function process_transaction()
   catch(err)
   {
     process.nextTick(process_transaction); //ensure we move on to the next transaction in the file
-    console.log("error processing transaction: " + transaction.id + " error: " + util.inspect(err));
+    console.error((new Date()).toString() + "error processing transaction: " + transaction.id + " error: " + util.inspect(err));
     e.error = err;
     update_transaction_status(transaction,'error',util.inspect(err));
     d.reject(e);
@@ -237,7 +238,7 @@ function update_transaction_status(transaction,status,message,processor_transact
     {
       if(err)
       {
-        console.error("error updating transaction status: " + util.inspect(err) + " transaction_id: " + transaction.id + " status: " + status + " message: " + message);
+        console.error((new Date()).toString() + "error updating transaction status: " + util.inspect(err) + " transaction_id: " + transaction.id + " status: " + status + " message: " + message);
         var e = {
           transaction_id: transaction.id,
           batch_id: batch_id,
@@ -248,18 +249,10 @@ function update_transaction_status(transaction,status,message,processor_transact
     });
 }
 
-/**
- * Call the Dwolla guest send api to process the transaction
- */
-function dwolla_guest_send(info,deferred)
-{
-  setTimeout(function()
-  {
-    console.log("resolve");
-    deferred.resolve();
-  },100);
-}
 
+/**
+ * Establish a connection to the database
+ */
 function connect_to_database(callback)
 {
   if(cn && connected)
