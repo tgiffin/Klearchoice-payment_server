@@ -6,7 +6,7 @@
 
 module.exports = {
   environment: "development",
-  db_host: "192.168.1.100",
+  db_host: db_host,
   db_user: "klearchoice",
   db_password: "KC02242012",
   dwolla_id: "812-708-2911", //this is the id of klearchoice's account
