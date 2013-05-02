@@ -167,7 +167,9 @@ function process_transaction()
           assumeCosts: true,
           destinationType: 'Dwolla',
           notes: "Online Donation to " + transaction.charity_name,
-          groupId: transaction.charity_id
+          groupId: transaction.charity_id,
+          facilitatorAmount: transaction.klearchoice_fee,
+          assumeAdditionalFees: true
         }
       },
       //http request callback
