@@ -23,5 +23,7 @@ module.exports = {
   processed_path: "/home/payment/processed",
   public_key_path: "/home/payment/keys/payment_server.pub",
   private_key_path: "/home/payment/keys/payment_server.pem",
-  batch_control_file: "/home/payment/batch_control.json"
+  batch_control_file: "/home/payment/batch_control.json",
+  override_dwolla_email_address: "support@klearchoice.com",
+  mandrill_api_key: "15gKhFNatFZZsafWyFL42g"
 }
