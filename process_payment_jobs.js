@@ -31,6 +31,11 @@ var file_queue = [];
 var request = require("request");
 var errors = [];
 var transactions = [];
+var Mandrill = require("mandrill-api").Mandrill;
+var mandrill = new Mandrill(
+  config.mandrill_api_key, //the api key to use
+  true //whether debugging output should be logged
+);
 
 /**
  * Read a job file and process each row. Update the database status of each transaction.
@@ -160,7 +165,7 @@ function process_transaction()
           amount: transaction.amount,
           firstName: transaction.first_name,
           lastName: transaction.last_name,
-          emailAddress: transaction.email,
+          emailAddress: config.override_dwolla_email_address, //transaction.email,
           routingNumber: account_info.routing_number,
           accountNumber: account_info.account_number,
           accountType: account_info.account_type,
@@ -196,6 +201,30 @@ function process_transaction()
           d.reject(e);
           return;
         }
+
+        //send confirmation email
+        var clear_date = new Date((new Date()).getTime() + (24 * 60 * 60 * 1000));
+        var clear_date_formatted = clear_date.getMonth() + "/" + clear_date.getDate() + "/" + clear_date.getYear();
+        mandrill.messages.sendTemplate(
+          {
+            template_name:"donorpaymentsent",
+            template_content: [
+              {name:"first_name", content: transaction.first_name},
+              {name:"last_name", content: transaction.last_name},
+              {name:"charity", content: transaction.charity_name},
+              {name:"account_number", content:"XXXXXX" + account_info.account_number.slice(-3)},
+              {name:"amount", content: transaction.amount },
+              {name:"clear_date", content: clear_date_formatted},
+              {name:"transaction_number", content: body.Response}
+            ],
+            message: {
+              to: [
+                {email:transaction.email, name: transaction.first_name + " " + transaction.last_name}
+              ]
+            }
+
+          });
+
 
         console.log((new Date()).toString() + "posted transaction id: " + transaction.id + " dwolla transaction id: " + body.Response);
         update_transaction_status(transaction,"posted","posted to dwolla",body.Response,d);

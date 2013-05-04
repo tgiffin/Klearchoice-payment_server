@@ -7,7 +7,8 @@
     "ursa": "~0.8.0",
     "q": "~0.8.12",
     "request": "~2.14.0",
-    "underscore": "~1.4.4"
+    "underscore": "~1.4.4",
+    "mandrill-api": "~1.0.19"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
