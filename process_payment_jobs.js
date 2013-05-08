@@ -226,7 +226,7 @@ function process_transaction()
 
         clear_date = new Date(clear_date);
 
-        var clear_date_formatted = clear_date.getMonth() + "/" + clear_date.getDate() + "/" + clear_date.getFullYear();
+        var clear_date_formatted = (clear_date.getMonth() + 1) + "/" + clear_date.getDate() + "/" + clear_date.getFullYear();
         mandrill.messages.sendTemplate(
           {
             template_name:"donorpaymentsent",
