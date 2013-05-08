@@ -203,8 +203,30 @@ function process_transaction()
         }
 
         //send confirmation email
-        var clear_date = new Date((new Date()).getTime() + (24 * 60 * 60 * 1000));
-        var clear_date_formatted = clear_date.getMonth() + "/" + clear_date.getDate() + "/" + clear_date.getYear();
+        var clear_date = new Date().getTime();
+        //add three days
+        clear_date += (3 * 24 * 60 * 60 * 1000);
+        //now keep adding days until we hit a business day, i.e., one that isn't saturday (6) or sunday (0)
+        for(var i=0; i<3;i++)
+        {
+          if( 
+              (
+                (new Date(clear_date))
+                  .getDay() != 6
+              )
+              && 
+              (
+                (new Date(clear_date))
+                  .getDay() != 0
+              )
+            ) break;
+
+          clear_date += (24 * 60 * 60 * 1000);
+        }
+
+        clear_date = new Date(clear_date);
+
+        var clear_date_formatted = clear_date.getMonth() + "/" + clear_date.getDate() + "/" + clear_date.getFullYear();
         mandrill.messages.sendTemplate(
           {
             template_name:"donorpaymentsent",
@@ -213,14 +235,15 @@ function process_transaction()
               {name:"last_name", content: transaction.last_name},
               {name:"charity", content: transaction.charity_name},
               {name:"account_number", content:"XXXXXX" + account_info.account_number.slice(-3)},
-              {name:"amount", content: transaction.amount },
+              {name:"amount", content: formatCurrency(transaction.amount + transaction.klearchoice_fee + transaction.processor_fee) },
               {name:"clear_date", content: clear_date_formatted},
               {name:"transaction_number", content: body.Response}
             ],
             message: {
               to: [
                 {email:transaction.email, name: transaction.first_name + " " + transaction.last_name}
-              ]
+              ],
+              tracking_domain: "klearchoice.com"
             }
 
           });
@@ -342,6 +365,23 @@ function check_for_jobs()
       
     });
 
+}
+
+
+/**
+ * Small utility function to format currency
+ */
+function formatCurrency(num) {
+  num = num.toString().replace(/\$|\,/g, '');
+  if (isNaN(num)) num = "0";
+  sign = (num == (num = Math.abs(num)));
+  num = Math.floor(num * 100 + 0.50000000001);
+  cents = num % 100;
+  num = Math.floor(num / 100).toString();
+  if (cents < 10) cents = "0" + cents;
+  for (var i = 0; i < Math.floor((num.length - (1 + i)) / 3); i++)
+    num = num.substring(0, num.length - (4 * i + 3)) + ',' + num.substring(num.length - (4 * i + 3));
+  return (((sign) ? '' : '-') + '$' + num + '.' + cents);
 }
 
 console.log("starting...");
