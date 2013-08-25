@@ -237,7 +237,7 @@ function process_transaction()
               {name:"account_number", content:"XXXXXX" + account_info.account_number.slice(-3)},
               {name:"amount", content: formatCurrency(transaction.amount + transaction.klearchoice_fee + transaction.processor_fee) },
               {name:"clear_date", content: clear_date_formatted},
-              {name:"transaction_number", content: body.Response}
+              {name:"transaction_number", content: transaction.id}
             ],
             message: {
               to: [
